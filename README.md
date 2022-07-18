@@ -1,5 +1,5 @@
 # Inteligencia Artificial Aplicada
-![Vision Artificial](https://github.com/walterpisacco/wp-deteccion_patentes/tree/main/lpr.png)
+![Vision Artificial](https://github.com/walterpisacco/wp-deteccion-patentes/blob/main/lpr.png)
 
 # Python 3.8
 
