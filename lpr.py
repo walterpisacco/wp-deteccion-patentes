@@ -3,20 +3,54 @@ import imutils
 import numpy as np
 import pytesseract
 from PIL import Image
-
+#from vidgear.gears import CamGear
 from gtts import gTTS
 from playsound import playsound
+#pip3 install flask-mysql
+from flaskext.mysql import MySQL
+from flask import Flask, render_template, json, request
+from datetime import datetime
 
 # sudo apt install tesseract-ocr
 
+mysql = MySQL()
+
+app = Flask(__name__ , template_folder= "modulos")
+app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
+
+from config import config
+configuracion = config()
+
+# MySQL configurations
+app.config['UPLOAD_FOLDER'] = configuracion.pathUpload
+app.config['MYSQL_DATABASE_USER'] = configuracion.usuario
+app.config['MYSQL_DATABASE_PASSWORD'] = configuracion.password
+app.config['MYSQL_DATABASE_DB'] = configuracion.base
+app.config['MYSQL_DATABASE_HOST'] = configuracion.servidor
+app.cliente = configuracion.cliente
+app.lista = 0
+
 patenteCant = 0
+lecturaAnt = ''
 patenteAnt = ''
 
-video = cv2.VideoCapture(0)
+mysql.init_app(app)
+
+conn = mysql.connect()
+cursor = conn.cursor()
+
+query = "select id from dx_ingresos.tipoLista where cliente = "+app.cliente+ " limit 1"
+cursor.execute(query)
+conn.commit()
+results = cursor.fetchall()
+if len(results) > 0:
+    for row in results:
+        app.lista = row[0]
+
+video = cv2.VideoCapture(2)
 
 while True:
     success, frame = video.read()
-
     if success:
         image = frame
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -73,27 +107,52 @@ while True:
                 patente = text
 
                 if (len(patente) > 2) :
-                    print("Lectura: ",patente)
-                    if (patenteAnt != patente) :
-                        patenteAnt = patente
-                        patenteCant = 1            
+                    #print("Lectura: ",patente)
+                    if (lecturaAnt != patente) :
+                        lecturaAnt = patente
 
-                    if patenteCant == 5:
-                        print("Patente: ",patente)
-                        cv2.imshow('Cropped',Cropped)
-                        try:
-                            tts = gTTS('Patente, '+patente, lang='es-es', slow=False)
-                            NOMBRE_ARCHIVO = patente+".mp3"
-                            with open(NOMBRE_ARCHIVO, "wb") as archivo:
-                                tts.write_to_fp(archivo)
-
-                            playsound(NOMBRE_ARCHIVO)
-                            patenteCant = 1
-                        except:
-                            pass
                     else:
+                        #espero que lea 5 veces seguidas la misma patente para verificar que no es un error (mejorar)
                         patenteCant = patenteCant + 1
-                        patenteAnt = patente
+                        print(patenteCant, patenteAnt, patente)
+                        if patenteCant == 7:
+                            patenteCant = 1
+                            if patenteAnt != patente:
+                                lecturaAnt = patente
+                                patenteAnt = patente
+
+                                dia = str(datetime.now())[:-7]
+                                cv2.imshow('Cropped',Cropped)
+
+                                query = "update dx_ingresos.listaBlancaVehiculos set"
+                                campos = " estado = 0, deleted_at = '"+dia+"'"
+                                where = " where estado = 1 and idCliente = "+app.cliente+" and patente = '"+patente+"'"
+                                cursor.execute(query+campos+where)                                
+
+
+                                query = "INSERT INTO dx_ingresos.listaBlancaVehiculos(idCliente,patente,fechaDesde,fechaHasta,fecha,estado,lista,created_at)"
+                                valores = " VALUES("+app.cliente+",'"+patente+"','"+dia+"','"+dia+"','"+dia+"',1,"+str(app.lista)+",'"+dia+"')"
+
+                                cursor.execute(query+valores)
+
+                                query = "INSERT INTO dx_ingresos.lecturaPatentes(idCliente,idEquipo,camara,patente,fecha,idListaBlanca,estado)"
+                                valores = " VALUES("+app.cliente+",1,'Ingreso','"+patente+"','"+dia+"',"+str(app.lista)+",1)"
+                                cursor.execute(query+valores)
+
+                                conn.commit()
+
+                                try:
+                                    tts = gTTS('Patente, '+patente, lang='es-es', slow=False)
+                                    NOMBRE_ARCHIVO = "sonido.mp3"
+                                    with open(NOMBRE_ARCHIVO, "wb") as archivo:
+                                        tts.write_to_fp(archivo)
+
+                                    playsound(NOMBRE_ARCHIVO)
+                                except:
+                                    pass
+                                #except OSError as error:
+                                #    print(error)
+                
         except:
             pass 
 
