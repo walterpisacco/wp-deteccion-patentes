@@ -34,3 +34,6 @@ pip3 install flask<br>
 
 Python3 lpr.py
 
+##Aplicación Asociada
+sas-admin
+
