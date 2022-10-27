@@ -102,7 +102,7 @@ while True:
                 Cropped = gray[topx:bottomx+1, topy:bottomy+1]
 
                 #Read the number plate
-                text = pytesseract.image_to_string(Cropped,lang="eng", config='--psm 10 --oem 1 -c tessedit_char_whitelist=0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ')
+                text = pytesseract.image_to_string(Cropped,lang="eng", config='--psm 7 --oem 1 -c tessedit_char_whitelist=0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ')
                 text = text.replace('\n','',4) # quitar enters
                 text = text.strip() # quitar enters al inicio y final
                 #patente = text.replace("%","").replace("|","").replace("!","").replace("\u2018","").replace(".","").replace(" ","").replace("`","").replace("[","").replace("]","").replace(",","").replace("'","").replace("(","").replace(")","").replace("{","").replace("","")
