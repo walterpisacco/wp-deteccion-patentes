@@ -105,7 +105,8 @@ while True:
                 text = pytesseract.image_to_string(Cropped,lang="eng", config='--psm 10 --oem 1 -c tessedit_char_whitelist=0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ')
                 text = text.replace('\n','',4) # quitar enters
                 text = text.strip() # quitar enters al inicio y final
-                patente = text.replace("|","").replace("!","").replace("\u2018","").replace(".","").replace(" ","").replace("`","").replace("[","").replace("]","").replace(",","").replace("'","").replace("(","").replace(")","").replace("{","").replace("","")
+                #patente = text.replace("%","").replace("|","").replace("!","").replace("\u2018","").replace(".","").replace(" ","").replace("`","").replace("[","").replace("]","").replace(",","").replace("'","").replace("(","").replace(")","").replace("{","").replace("","")
+                patente = ''.join(char for char in text if char.isalnum())
                 print(patente)
 
                 if (len(patente) > 2) :
@@ -154,7 +155,6 @@ while True:
                                     #playsound(NOMBRE_ARCHIVO)
                                 except:
                                     pass
-
                 
         except OSError as error:
             #print(error)
