@@ -11,7 +11,8 @@ from flaskext.mysql import MySQL
 from flask import Flask, render_template, json, request
 from datetime import datetime
 
-# sudo apt install tesseract-ocr
+# sudo apt-get update
+# sudo apt-get install tesseract-ocr
 
 mysql = MySQL()
 
@@ -47,7 +48,7 @@ if len(results) > 0:
     for row in results:
         app.lista = row[0]
 
-video = cv2.VideoCapture(2)
+video = cv2.VideoCapture(0)
 
 while True:
     success, frame = video.read()
@@ -62,7 +63,7 @@ while True:
         edged = cv2.Canny(gray, 30, 200) #Perform Edge detection
 
         try:
-            # encuentramo contornos en la imagen con bordes, obtenemos solo el más grande
+            # encuentramo contornos en la imagen con bordes, obtenemos solo el m\u00e1s grande
             # inicializamos nuestro contador
             cnts = cv2.findContours(edged.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
             cnts = imutils.grab_contours(cnts)
@@ -101,10 +102,11 @@ while True:
                 Cropped = gray[topx:bottomx+1, topy:bottomy+1]
 
                 #Read the number plate
-                text = pytesseract.image_to_string(Cropped, config='--psm 10 --oem 1 -c tessedit_char_whitelist=0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ')
+                text = pytesseract.image_to_string(Cropped,lang="eng", config='--psm 10 --oem 1 -c tessedit_char_whitelist=0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ')
                 text = text.replace('\n','',4) # quitar enters
                 text = text.strip() # quitar enters al inicio y final
-                patente = text
+                patente = text.replace("|","").replace("!","").replace("\u2018","").replace(".","").replace(" ","").replace("`","").replace("[","").replace("]","").replace(",","").replace("'","").replace("(","").replace(")","").replace("{","").replace("","")
+                print(patente)
 
                 if (len(patente) > 2) :
                     #print("Lectura: ",patente)
@@ -114,7 +116,7 @@ while True:
                     else:
                         #espero que lea 5 veces seguidas la misma patente para verificar que no es un error (mejorar)
                         patenteCant = patenteCant + 1
-                        print(patenteCant, patenteAnt, patente)
+                        #print(patenteCant, patenteAnt, patente)
                         if patenteCant == 7:
                             patenteCant = 1
                             if patenteAnt != patente:
@@ -140,20 +142,23 @@ while True:
                                 cursor.execute(query+valores)
 
                                 conn.commit()
+                                
+                                print('grabado: '+patente)
 
                                 try:
-                                    tts = gTTS('Patente, '+patente, lang='es-es', slow=False)
+                                    #tts = gTTS('Patente, '+patente, lang='es-es', slow=False)
                                     NOMBRE_ARCHIVO = "sonido.mp3"
-                                    with open(NOMBRE_ARCHIVO, "wb") as archivo:
-                                        tts.write_to_fp(archivo)
+                                    #with open(NOMBRE_ARCHIVO, "wb") as archivo:
+                                    #    tts.write_to_fp(archivo)
 
-                                    playsound(NOMBRE_ARCHIVO)
+                                    #playsound(NOMBRE_ARCHIVO)
                                 except:
                                     pass
-                                #except OSError as error:
-                                #    print(error)
+
                 
-        except:
-            pass 
+        except OSError as error:
+            #print(error)
+            pass
 
 cap.release()
+
