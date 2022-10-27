@@ -38,17 +38,6 @@ patenteAnt = ''
 
 mysql.init_app(app)
 
-conn = mysql.connect()
-cursor = conn.cursor()
-
-query = "select id from dx_ingresos.tipoLista where cliente = "+app.cliente+ " limit 1"
-cursor.execute(query)
-conn.commit()
-results = cursor.fetchall()
-if len(results) > 0:
-    for row in results:
-        app.lista = row[0]
-
 video = cv2.VideoCapture(2)
 
 while True:
@@ -127,22 +116,35 @@ while True:
 
                                 dia = str(datetime.now())[:-7]
 
-                                query = "update dx_ingresos.listaBlancaVehiculos set"
-                                campos = " estado = 0, deleted_at = '"+dia+"'"
-                                where = " where estado = 1 and idCliente = "+app.cliente+" and patente = '"+patente+"'"
-                                cursor.execute(query+campos+where)                                
+                                try:
+                                    conn = mysql.connect()
+                                    cursor = conn.cursor()
 
+                                    query = "select id from dx_ingresos.tipoLista where cliente = "+app.cliente+ " limit 1"
+                                    cursor.execute(query)
+                                    conn.commit()
+                                    results = cursor.fetchall()
+                                    if len(results) > 0:
+                                        for row in results:
+                                            app.lista = row[0]
 
-                                query = "INSERT INTO dx_ingresos.listaBlancaVehiculos(idCliente,patente,fechaDesde,fechaHasta,fecha,estado,lista,created_at)"
-                                valores = " VALUES("+app.cliente+",'"+patente+"','"+dia+"','"+dia+"','"+dia+"',1,"+str(app.lista)+",'"+dia+"')"
+                                    query = "update dx_ingresos.listaBlancaVehiculos set"
+                                    campos = " estado = 0, deleted_at = '"+dia+"'"
+                                    where = " where estado = 1 and idCliente = "+app.cliente+" and patente = '"+patente+"'"
+                                    cursor.execute(query+campos+where)                                
 
-                                cursor.execute(query+valores)
+                                    query = "INSERT INTO dx_ingresos.listaBlancaVehiculos(idCliente,patente,fechaDesde,fechaHasta,fecha,estado,lista,created_at)"
+                                    valores = " VALUES("+app.cliente+",'"+patente+"','"+dia+"','"+dia+"','"+dia+"',1,"+str(app.lista)+",'"+dia+"')"
 
-                                query = "INSERT INTO dx_ingresos.lecturaPatentes(idCliente,idEquipo,camara,patente,fecha,idListaBlanca,estado)"
-                                valores = " VALUES("+app.cliente+",1,'Ingreso','"+patente+"','"+dia+"',"+str(app.lista)+",1)"
-                                cursor.execute(query+valores)
+                                    cursor.execute(query+valores)
 
-                                conn.commit()
+                                    query = "INSERT INTO dx_ingresos.lecturaPatentes(idCliente,idEquipo,camara,patente,fecha,idListaBlanca,estado)"
+                                    valores = " VALUES("+app.cliente+",1,'Ingreso','"+patente+"','"+dia+"',"+str(app.lista)+",1)"
+                                    cursor.execute(query+valores)
+
+                                    conn.commit()
+                                except:
+                                    pass
                                 
                                 print('grabado: '+patente)
                                 cv2.imshow('Cropped',Cropped)                                
