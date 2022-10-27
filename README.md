@@ -30,6 +30,10 @@ pip install playsound<br>
 pip install flask-mysql<br>
 pip3 install flask<br>
 
+sudo apt-get update
+sudo apt-get install tesseract-ocr
+para RASPI: sudo apt install python3-gst-1.0
+
 ## Ejecución
 
 Python3 lpr.py
