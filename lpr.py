@@ -13,6 +13,7 @@ from datetime import datetime
 
 # sudo apt-get update
 # sudo apt-get install tesseract-ocr
+# para RASPI: sudo apt install python3-gst-1.0
 
 mysql = MySQL()
 
@@ -125,7 +126,6 @@ while True:
                                 patenteAnt = patente
 
                                 dia = str(datetime.now())[:-7]
-                                cv2.imshow('Cropped',Cropped)
 
                                 query = "update dx_ingresos.listaBlancaVehiculos set"
                                 campos = " estado = 0, deleted_at = '"+dia+"'"
@@ -145,6 +145,7 @@ while True:
                                 conn.commit()
                                 
                                 print('grabado: '+patente)
+                                cv2.imshow('Cropped',Cropped)                                
 
                                 try:
                                     tts = gTTS('Patente, '+patente, lang='es-es', slow=False)
