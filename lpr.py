@@ -38,17 +38,29 @@ patenteAnt = ''
 
 mysql.init_app(app)
 
-video = cv2.VideoCapture(2)
+#video = cv2.VideoCapture(2)
+#video = CamGear(source="https://www.youtube.com/watch?v=7SZuhEfjEZk", stream_mode = True, logging=True).start()
+
+#video = cv2.VideoCapture("rtsp://admin:0000@192.168.0.51:80/live/h264/ch01")
+
+#******* SON LO MISMO PARA KIKVISION ********
+#video = cv2.VideoCapture("rtsp://admin:admin1234@192.168.0.52:554/h264/ch01/sub/av_stream")
+video = cv2.VideoCapture("rtsp://admin:admin1234@192.168.0.52:554/Streaming/Channels/902")
+#*****************************
+
+#video = cv2.VideoCapture("rtsp://admin:Global*3522@192.168.0.108:554/cam/realmonitor?channel=1&subtype=1")
 
 while True:
-    success, frame = video.read()
-    if success:
-        image = frame
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    success, image = video.read()
+    cv2.imshow('image', image)
+    if cv2.waitKey(1) == ord('q'):
+        break
 
-        camera = imutils.resize(image, width=720)
-        gray = cv2.cvtColor(camera, cv2.COLOR_BGR2GRAY) #convert to grey scale
+    if success:
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+        #image = imutils.resize(image, width=720)
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) #convert to grey scale
         gray = cv2.bilateralFilter(gray, 11, 17, 17) #Blur to reduce noise
         edged = cv2.Canny(gray, 30, 200) #Perform Edge detection
 
@@ -77,13 +89,13 @@ while True:
                 detected = 1
 
             if detected == 1:
-                cv2.drawContours(camera, [screenCnt], -1, (0, 255, 0), 3)
+                cv2.drawContours(image, [screenCnt], -1, (0, 255, 0), 3)
 
                 # Masking the part other than the number plate
                 mask = np.zeros(gray.shape,np.uint8)
-                new_image = cv2.drawContours(mask,[screenCnt],0,255,-1,)
-                #new_image = cv2.drawContours(mask, [screenCnt.astype(int)], 0, (255, 0, 0), 3)
-                new_image = cv2.bitwise_and(camera,camera,mask=mask)
+                #new_image = cv2.drawContours(mask,[screenCnt],0,255,-1,)
+                new_image = cv2.drawContours(mask, [screenCnt.astype(int)], 0, (255, 0, 0), 3)
+                new_image = cv2.bitwise_and(image,image,mask=mask)
 
                 #Now crop
                 (x, y) = np.where(mask == 255)
@@ -97,10 +109,9 @@ while True:
                 text = text.strip() # quitar enters al inicio y final
                 #patente = text.replace("%","").replace("|","").replace("!","").replace("\u2018","").replace(".","").replace(" ","").replace("`","").replace("[","").replace("]","").replace(",","").replace("'","").replace("(","").replace(")","").replace("{","").replace("","")
                 patente = ''.join(char for char in text if char.isalnum())
-                print(patente)
 
                 if (len(patente) > 2) :
-                    #print("Lectura: ",patente)
+                    print(patente)
                     if (lecturaAnt != patente) :
                         lecturaAnt = patente
 
@@ -108,7 +119,7 @@ while True:
                         #espero que lea 5 veces seguidas la misma patente para verificar que no es un error (mejorar)
                         patenteCant = patenteCant + 1
                         #print(patenteCant, patenteAnt, patente)
-                        if patenteCant == 7:
+                        if patenteCant == 5:
                             patenteCant = 1
                             if patenteAnt != patente:
                                 lecturaAnt = patente
@@ -163,5 +174,6 @@ while True:
             #print(error)
             pass
 
-cap.release()
+video.release()
+cv2.destroyAllWindows()
 
